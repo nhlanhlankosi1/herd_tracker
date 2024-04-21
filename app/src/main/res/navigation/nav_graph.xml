@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_my_herd">
+
+    <fragment
+        android:id="@+id/navigation_my_herd"
+        android:name="com.nhlanhlankosi.tablayoutdemo.fragments.MyHerdFragment"
+        android:label="My Herd"
+        tools:layout="@layout/fragment_my_herd" />
+
+    <action
+        android:id="@+id/action_global_navigation_my_herd"
+        app:destination="@id/navigation_my_herd"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/navigation_my_herd"
+        app:popUpToInclusive="false" />
+
+    <fragment
+        android:id="@+id/navigation_watchboard"
+        android:name="com.nhlanhlankosi.tablayoutdemo.fragments.WatchboardFragment"
+        android:label="Watchboard"
+        tools:layout="@layout/fragment_watch_board" />
+
+    <action
+        android:id="@+id/action_global_navigation_watch_board"
+        app:destination="@id/navigation_watchboard"
+        app:launchSingleTop="true" />
+
+    <fragment
+        android:id="@+id/navigation_my_farm"
+        android:name="com.nhlanhlankosi.tablayoutdemo.fragments.MyFarmFragment"
+        android:label="My Farm"
+        tools:layout="@layout/fragment_my_farm" />
+
+    <action
+        android:id="@+id/action_global_navigation_my_farm"
+        app:destination="@id/navigation_my_farm"
+        app:launchSingleTop="true" />
+
+    <fragment
+        android:id="@+id/navigation_notifications"
+        android:name="com.nhlanhlankosi.tablayoutdemo.fragments.NotificationsFragment"
+        android:label="Notifications"
+        tools:layout="@layout/fragment_notifications" />
+
+</navigation>

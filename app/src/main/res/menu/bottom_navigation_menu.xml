@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_my_herd"
+        android:icon="@drawable/ic_my_herd"
+        android:title="My Herd" />
+    <item
+        android:id="@+id/navigation_watchboard"
+        android:icon="@drawable/ic_watchboard"
+        android:title="Watchboard" />
+    <item
+        android:id="@+id/navigation_my_farm"
+        android:icon="@drawable/ic_my_farm"
+        android:title="My Farm" />
+    <item
+        android:id="@+id/navigation_notifications"
+        android:icon="@drawable/ic_notifications"
+        android:title="Notifications" />
+</menu>

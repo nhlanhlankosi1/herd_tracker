@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "304269665715",
+    "project_id": "herdtracker-5f378",
+    "storage_bucket": "herdtracker-5f378.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:304269665715:android:e0ad099290ad40637697c6",
+        "android_client_info": {
+          "package_name": "com.nhlanhlankosi.tablayoutdemo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApf2kD4IyVnxVJn5m3Sl7ty2uo4zJDTVY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

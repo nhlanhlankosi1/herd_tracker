@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">HerdTracker</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="msg_token_fmt" translatable="false">InstanceID Token: %s</string>
+    <string name="add_cow">Add cow</string>
+    <string name="profile_photo">Profile photo</string>
+</resources>

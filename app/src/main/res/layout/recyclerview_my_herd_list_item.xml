@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/leaderboard_recycler_view_item_card_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <ImageView
+            android:id="@+id/cow_picture"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="15dp"
+            android:contentDescription="Cow picture"
+            android:scaleType="centerCrop"
+            android:src="@drawable/cow_pic_place_holder"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:layout_marginStart="15dp"
+            android:gravity="center"
+            app:layout_constraintStart_toEndOf="@id/cow_picture"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <TextView
+                android:id="@+id/cow_name_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginEnd="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:padding="1dp"
+                android:textColor="@color/dark_grey"
+                android:textSize="14sp"
+                android:text="Name: JAMLUTHI" />
+
+            <TextView
+                android:id="@+id/collar_id_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginEnd="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:padding="1dp"
+                android:textColor="@color/dark_grey"
+                android:textSize="14sp"
+                android:text="Collar Id: lkjsfoielkjs" />
+
+            <TextView
+                android:id="@+id/heart_rate_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginEnd="2dp"
+                android:ellipsize="end"
+                android:padding="1dp"
+                android:maxLines="1"
+                android:textColor="@color/dark_grey"
+                android:textSize="14sp"
+                android:text="HeartRate: 84 bpm" />
+
+            <TextView
+                android:id="@+id/cow_temperature_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginEnd="2dp"
+                android:padding="1dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/dark_grey"
+                android:textSize="15sp"
+                android:text="Temperature: 39.5°C" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>
+
+
+
