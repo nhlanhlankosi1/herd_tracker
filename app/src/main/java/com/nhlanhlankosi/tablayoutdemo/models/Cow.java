@@ -10,12 +10,17 @@ public class Cow {
     private long heartRate;
 
     private double temperature;
+    private String ownerId;
 
     private double longitude;
     private double latitude;
 
-    public Cow(String name, String id, String cowPicUrl, String collarId, String gender,
-               String breed, long heartRate, double temperature, double longitude, double latitude) {
+    public Cow() {
+    }
+
+    public Cow(String name, String id, String cowPicUrl, String collarId,
+               String gender, String breed, long heartRate, double temperature,
+               double longitude, double latitude, String ownerId) {
         this.name = name;
         this.id = id;
         this.cowPicUrl = cowPicUrl;
@@ -26,6 +31,7 @@ public class Cow {
         this.temperature = temperature;
         this.longitude = longitude;
         this.latitude = latitude;
+        this.ownerId = ownerId;
     }
 
     public String getName() {
@@ -106,5 +112,13 @@ public class Cow {
 
     public void setTemperature(double temperature) {
         this.temperature = temperature;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
 }

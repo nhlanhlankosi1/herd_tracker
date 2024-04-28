@@ -18,6 +18,7 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,7 +59,6 @@ public class ProfileActivity extends AppCompatActivity {
     private CircleImageView userProfilePic;
     private TextInputEditText userNameTxt;
     private TextInputEditText emailTxt;
-    private Uri pickedImgUri;
     private AlertDialog dialog;
 
     private DatabaseReference profilePicUrlRef;
@@ -79,6 +79,7 @@ public class ProfileActivity extends AppCompatActivity {
         emailTxt = findViewById(R.id.email_txt);
         numberOfCattleText = findViewById(R.id.num_of_cattle_text);
         Button editProfileBtn = findViewById(R.id.edit_profile_btn);
+        Button deleteGeoMapsBtn = findViewById(R.id.delete_geo_maps_btn);
         Button logoutBtn = findViewById(R.id.logout_btn);
 
         String username1 = userNameTxt.getText().toString();
@@ -177,23 +178,44 @@ public class ProfileActivity extends AppCompatActivity {
             updateUserInfo();
         });
 
+        deleteGeoMapsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                (new AlertDialog.Builder(ProfileActivity.this))
+                        .setMessage("Are you sure you want to delete all your geo-maps?")
+                        .setPositiveButton("Yes", (dialog, which) -> {
+                            FirebaseDatabase.getInstance().getReference("geo_fence_coordinates")
+                                    .child(currentUser.getUserId()).removeValue();
+                        })
+                        .setNegativeButton("No", (dialog, which) -> { /*Intentionally left blank to cancel dialog*/ })
+                        .create().show();
+            }
+        });
+
         logoutBtn.setOnClickListener(view -> {
-            FirebaseAuth.getInstance().signOut();
-            SharedPreferencesHelper.deleteUser(this);
-            Intent openMainActivity = new Intent(ProfileActivity.this, LoginActivity.class);
-            openMainActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(openMainActivity);
-            finish();
+
+            (new AlertDialog.Builder(this))
+                    .setMessage("Are you sure you want to log out of HerdTracker?")
+                    .setPositiveButton("LOG OUT", (dialog, which) -> {
+                        FirebaseAuth.getInstance().signOut();
+                        SharedPreferencesHelper.deleteUser(this);
+                        Intent openMainActivity = new Intent(ProfileActivity.this, LoginActivity.class);
+                        openMainActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(openMainActivity);
+                        finish();
+                    })
+                    .setNegativeButton("CANCEL", (dialog, which) -> { /*Intentionally left blank to cancel dialog*/ })
+                    .create().show();
         });
 
     }
 
     private void setTheNumberOfCattle() {
 
-        DatabaseReference userHerd = FirebaseDatabase.getInstance().getReference("herds")
+        DatabaseReference userHerdRef = FirebaseDatabase.getInstance().getReference("herds")
                 .child(currentUser.getUserId());
 
-        userHerd.addListenerForSingleValueEvent(new ValueEventListener() {
+        userHerdRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 int numberOfCattle = 0;
@@ -328,7 +350,7 @@ public class ProfileActivity extends AppCompatActivity {
 
             try {
 
-                pickedImgUri = data.getData();
+                Uri pickedImgUri = data.getData();
 
                 Bitmap finalBmpFile = null;
                 try {

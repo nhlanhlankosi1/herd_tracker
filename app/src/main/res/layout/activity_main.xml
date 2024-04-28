@@ -18,15 +18,15 @@
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
-                android:layout_width="35dp"
-                android:layout_height="35dp"
-                android:layout_marginStart="15dp"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
                 android:background="@null"
                 android:gravity="center"
                 android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/user_profile_pic_in_toolbar"
                 app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
             <de.hdodenhof.circleimageview.CircleImageView

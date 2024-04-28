@@ -7,6 +7,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -30,18 +31,23 @@ import com.squareup.picasso.Picasso;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity {
+    public static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 2;
     private static final int REQUEST_LOCATION_PERMISSION_REQUEST_CODE = 1;
     private FusedLocationProviderClient fusedLocationProviderClient;
+    private User currentUser;
+    private CircleImageView userProfilePicInToolbar;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setTitleTextColor(getResources().getColor(R.color.dark_grey));
 
-        CircleImageView userProfilePicInToolbar = findViewById(R.id.user_profile_pic_in_toolbar);
+        userProfilePicInToolbar = findViewById(R.id.user_profile_pic_in_toolbar);
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> startActivity(new Intent(MainActivity.this,
@@ -70,20 +76,9 @@ public class MainActivity extends AppCompatActivity {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-        User currentUser = SharedPreferencesHelper.getUser(this);
+        currentUser = SharedPreferencesHelper.getUser(this);
 
-        toolbar.setTitle("Welcome, " + currentUser.getUserName());
-
-        if (!TextUtils.isEmpty(currentUser.getProfilePicUrl())) {
-
-            Picasso.get()
-                    .load(currentUser.getProfilePicUrl())
-                    .placeholder(R.drawable.profile_pic_icon)
-                    .fit()
-                    .centerInside()
-                    .into(userProfilePicInToolbar);
-
-        }
+        showUserNameAndProfilePicOnToolbar();
 
         userProfilePicInToolbar.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,6 +92,42 @@ public class MainActivity extends AppCompatActivity {
 
         requestLocationPermission();
 
+        requestNotificationsPermission();
+
+    }
+
+    private void requestNotificationsPermission() {
+
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+
+        } else {
+
+            //At this point, permission is denied, therefore we ask for permission
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST_CODE);
+
+        }
+
+    }
+
+    private void showUserNameAndProfilePicOnToolbar() {
+
+        if (currentUser == null) {
+            return;
+        }
+
+        toolbar.setTitle("Welcome, " + currentUser.getUserName());
+        if (!TextUtils.isEmpty(currentUser.getProfilePicUrl())) {
+
+            Picasso.get()
+                    .load(currentUser.getProfilePicUrl())
+                    .placeholder(R.drawable.profile_pic_icon)
+                    .fit()
+                    .centerInside()
+                    .into(userProfilePicInToolbar);
+
+        }
     }
 
     @Override
@@ -104,9 +135,13 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         getCurrentLocation();
+
+        showUserNameAndProfilePicOnToolbar();
+
     }
 
     private void requestLocationPermission() {
+
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -125,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION_REQUEST_CODE);
 
         }
+
     }
 
     private void getCurrentLocation() {
@@ -140,14 +176,29 @@ public class MainActivity extends AppCompatActivity {
 
                 Location currentLocation = task.getResult();
 
-                CowLocation cowLocation = new CowLocation(currentLocation.getLatitude(), currentLocation.getLongitude());
-
-                SharedPreferencesHelper.saveCowLocation(MainActivity.this, cowLocation);
+                if (currentLocation != null) {
+                    CowLocation cowLocation = new CowLocation(currentLocation.getLatitude(), currentLocation.getLongitude());
+                    SharedPreferencesHelper.saveCowLocation(MainActivity.this, cowLocation);
+                }
 
             }
 
         });
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, you can show notifications
+
+            } else {
+                // Permission denied, you can't show notifications
+                Toast.makeText(this, "Please allow notifications to get realtime data", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
 }

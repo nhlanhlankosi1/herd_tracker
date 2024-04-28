@@ -231,8 +231,8 @@ public class AddCowActivity extends AppCompatActivity {
                 double longitude = cowLocation != null ? cowLocation.getLongitude() : 0;
                 double latitude = cowLocation != null ? cowLocation.getLatitude() : 0;
 
-                final Cow cow = new Cow(name, cowId, cowPicUrl, collarId, gender, breed, 0,
-                        Common.NORMAL_COW_TEMPERATURE, longitude, latitude);
+                final Cow cow = new Cow(name, cowId, cowPicUrl, collarId, gender, breed, Common.getRandomCowHeartRate(),
+                        Common.getRandomCowTemperature(), longitude, latitude, userId);
 
                 // Push the cow object to the database under the cowId node
                 cowRef.setValue(cow).addOnCompleteListener(new OnCompleteListener<Void>() {

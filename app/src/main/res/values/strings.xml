@@ -5,4 +5,9 @@
     <string name="msg_token_fmt" translatable="false">InstanceID Token: %s</string>
     <string name="add_cow">Add cow</string>
     <string name="profile_photo">Profile photo</string>
+    <string name="search_your_herd">Search Your Herd</string>
+    <string name="search_for_a_cow">Search For A Cow</string>
+    <string name="no_cow_from_search_fmt" translatable="false">There are no cattle names which match the search term \"%s\". Please check that you have typed the name correctly and retry</string>
+    <string name="search">Search</string>
+
 </resources>

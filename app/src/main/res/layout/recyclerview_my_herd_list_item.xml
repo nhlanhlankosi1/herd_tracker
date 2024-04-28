@@ -74,7 +74,7 @@
                 android:maxLines="1"
                 android:textColor="@color/dark_grey"
                 android:textSize="14sp"
-                android:text="HeartRate: 84 bpm" />
+                android:text="Heart Rate: 84 bpm" />
 
             <TextView
                 android:id="@+id/cow_temperature_tv"

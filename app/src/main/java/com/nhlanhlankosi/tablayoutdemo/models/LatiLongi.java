@@ -1,14 +1,13 @@
 package com.nhlanhlankosi.tablayoutdemo.models;
 
-public class CowLocation {
+public class LatiLongi {
+    private double latitude;
+    private double longitude;
 
-    double latitude;
-    double longitude;
-
-    public CowLocation() {
+    public LatiLongi() {
     }
 
-    public CowLocation(double latitude, double longitude) {
+    public LatiLongi(double latitude, double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
     }
@@ -28,5 +27,4 @@ public class CowLocation {
     public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
-
 }

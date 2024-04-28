@@ -1,8 +1,20 @@
 package com.nhlanhlankosi.tablayoutdemo.listAdapters;
 
-import android.app.Activity;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.BREED;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.COLLAR_ID;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.COW_ID;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.COW_NAME;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.COW_PIC_URL;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.GENDER;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.HEART_RATE;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.LATITUDE;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.LONGITUDE;
+import static com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity.TEMPERATURE;
+
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,20 +25,22 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.nhlanhlankosi.tablayoutdemo.R;
+import com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity;
 import com.nhlanhlankosi.tablayoutdemo.infrastructure.interfaces.ItemClickListener;
 import com.nhlanhlankosi.tablayoutdemo.models.Cow;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class SearchAllHymnsAdapter extends RecyclerView.Adapter<SearchAllHymnsAdapter.ViewHolder> {
+public class SearchCattleAdapter extends RecyclerView.Adapter<SearchCattleAdapter.ViewHolder> {
 
     private final Context context;
     private final List<Cow> cattleList;
     private final ArrayList<Cow> arrayList = new ArrayList<>();
 
-    public SearchAllHymnsAdapter(Context context, List<Cow> cattleList) {
+    public SearchCattleAdapter(Context context, List<Cow> cattleList) {
         this.context = context;
         this.cattleList = cattleList;
         this.arrayList.addAll(cattleList);
@@ -42,6 +56,17 @@ public class SearchAllHymnsAdapter extends RecyclerView.Adapter<SearchAllHymnsAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
 
+        if (!TextUtils.isEmpty(cattleList.get(position).getCowPicUrl())) {
+
+            Picasso.get()
+                    .load(cattleList.get(position).getCowPicUrl())
+                    .placeholder(R.drawable.cow_pic_place_holder)
+                    .fit()
+                    .centerInside()
+                    .into(viewHolder.cowPicture);
+
+        }
+
         viewHolder.cowNameTv.setText(cattleList.get(position).getName());
         viewHolder.collarIdTv.setText(cattleList.get(position).getCollarId());
         viewHolder.heartRateTv.setText(String.format(Locale.ENGLISH, "%d bpm", cattleList.get(position).getHeartRate()));
@@ -49,12 +74,22 @@ public class SearchAllHymnsAdapter extends RecyclerView.Adapter<SearchAllHymnsAd
 
         viewHolder.setItemClickListener((v, absPosition, isLongClick) -> {
 
-            Hymn hymn = cattleList.get(absPosition);
-            Activity hymnCategoryActivity = getHymnCategoryActivity(hymn.getExtraHymnIdKey());
-            Intent openHymnActivity = new Intent(context, hymnCategoryActivity != null ?
-                    hymnCategoryActivity.getClass() : NdebeleHymnsMainActivity.class);
-            openHymnActivity.putExtra(hymn.getExtraHymnIdKey(), hymn.getExtraHymnIdValue());
-            context.startActivity(openHymnActivity);
+            Cow cow = cattleList.get(absPosition);
+            Bundle cowBundle = new Bundle();
+            cowBundle.putString(COW_NAME, cow.getName());
+            cowBundle.putString(COW_ID, cow.getId());
+            cowBundle.putString(COW_PIC_URL, cow.getCowPicUrl());
+            cowBundle.putString(COLLAR_ID, cow.getCollarId());
+            cowBundle.putString(GENDER, cow.getGender());
+            cowBundle.putString(BREED, cow.getBreed());
+            cowBundle.putLong(HEART_RATE, cow.getHeartRate());
+            cowBundle.putDouble(TEMPERATURE, cow.getTemperature());
+            cowBundle.putDouble(LONGITUDE, cow.getLongitude());
+            cowBundle.putDouble(LATITUDE, cow.getLatitude());
+            Intent cowInfoIntent = new Intent(context, CowInfoActivity.class);
+            cowInfoIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            cowInfoIntent.putExtras(cowBundle);
+            context.startActivity(cowInfoIntent);
 
         });
 
@@ -65,7 +100,7 @@ public class SearchAllHymnsAdapter extends RecyclerView.Adapter<SearchAllHymnsAd
         return cattleList != null ? cattleList.size() : 0;
     }
 
-    public void filter(String charText, SearchHymnListener searchHymnListener) {
+    public void filter(String charText, SearchCattleListener searchCattleListener) {
 
         charText = charText.toLowerCase(Locale.getDefault()).trim();
         cattleList.clear();
@@ -73,8 +108,8 @@ public class SearchAllHymnsAdapter extends RecyclerView.Adapter<SearchAllHymnsAd
         if (charText.equals(".")) {
             cattleList.addAll(arrayList);
         } else {
-            for (Hymn searchListItem : arrayList) {
-                if (searchListItem.getHymnName().toLowerCase(Locale.getDefault())
+            for (Cow searchListItem : arrayList) {
+                if (searchListItem.getName().toLowerCase(Locale.getDefault())
                         .contains(charText)) {
                     cattleList.add(searchListItem);
                 }
@@ -84,13 +119,12 @@ public class SearchAllHymnsAdapter extends RecyclerView.Adapter<SearchAllHymnsAd
         notifyDataSetChanged();
 
         if (cattleList.isEmpty()) {
-            searchHymnListener.onEmptyResultReturnedFor(charText);
+            searchCattleListener.onEmptyResultReturnedFor(charText);
         }
 
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
         private final ImageView cowPicture;
         private final TextView cowNameTv;
         private final TextView collarIdTv;

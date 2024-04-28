@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/navigation_my_herd"
-        android:name="com.nhlanhlankosi.tablayoutdemo.fragments.MyHerdFragment"
+        android:name="com.nhlanhlankosi.tablayoutdemo.ui.myHerd.MyHerdFragment"
         android:label="My Herd"
         tools:layout="@layout/fragment_my_herd" />
 
@@ -20,7 +20,7 @@
 
     <fragment
         android:id="@+id/navigation_watchboard"
-        android:name="com.nhlanhlankosi.tablayoutdemo.fragments.WatchboardFragment"
+        android:name="com.nhlanhlankosi.tablayoutdemo.ui.watchBoard.WatchBoardFragment"
         android:label="Watchboard"
         tools:layout="@layout/fragment_watch_board" />
 
@@ -31,7 +31,7 @@
 
     <fragment
         android:id="@+id/navigation_my_farm"
-        android:name="com.nhlanhlankosi.tablayoutdemo.fragments.MyFarmFragment"
+        android:name="com.nhlanhlankosi.tablayoutdemo.ui.myFarm.MyFarmFragment"
         android:label="My Farm"
         tools:layout="@layout/fragment_my_farm" />
 
@@ -42,7 +42,7 @@
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.nhlanhlankosi.tablayoutdemo.fragments.NotificationsFragment"
+        android:name="com.nhlanhlankosi.tablayoutdemo.ui.notifications.NotificationsFragment"
         android:label="Notifications"
         tools:layout="@layout/fragment_notifications" />
 
