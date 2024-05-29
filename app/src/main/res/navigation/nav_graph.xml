@@ -9,7 +9,11 @@
         android:id="@+id/navigation_my_herd"
         android:name="com.nhlanhlankosi.tablayoutdemo.ui.myHerd.MyHerdFragment"
         android:label="My Herd"
-        tools:layout="@layout/fragment_my_herd" />
+        tools:layout="@layout/fragment_my_herd">
+        <action
+            android:id="@+id/action_myHerdFragment_to_notificationFragment"
+            app:destination="@id/navigation_notifications"/>
+    </fragment>
 
     <action
         android:id="@+id/action_global_navigation_my_herd"
@@ -44,6 +48,9 @@
         android:id="@+id/navigation_notifications"
         android:name="com.nhlanhlankosi.tablayoutdemo.ui.notifications.NotificationsFragment"
         android:label="Notifications"
-        tools:layout="@layout/fragment_notifications" />
+        tools:layout="@layout/fragment_notifications">
+        <deepLink
+            app:uri="myapp://notification"/>
+    </fragment>
 
 </navigation>

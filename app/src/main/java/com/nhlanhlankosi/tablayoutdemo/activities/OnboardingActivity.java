@@ -52,9 +52,12 @@ public class OnboardingActivity extends AppCompatActivity {
 
         // fill list screen
         final List<ScreenItem> mList = new ArrayList<>();
-        mList.add(new ScreenItem("Track Your Beast", "Monitor the whereabouts of each of your cattle seamlessly", R.drawable.img1));
-        mList.add(new ScreenItem("Geofencing Technology", "Set virtual boundaries for your farm, ensuring your cattle stay within designated areas.", R.drawable.img2));
-        mList.add(new ScreenItem("Real-time Health Monitoring", "Keep a close eye on your cattle's health, enabling prompt intervention if needed", R.drawable.img3));
+        mList.add(new ScreenItem("Track Your Beast", "Monitor the whereabouts of " +
+                "each of your cattle seamlessly", R.drawable.img1));
+        mList.add(new ScreenItem("Geofencing Technology", "Set virtual boundaries " +
+                "for your farm, ensuring your cattle stay within designated areas.", R.drawable.img2));
+        mList.add(new ScreenItem("Real-time Health Monitoring", "Keep a close eye on " +
+                "your cattle's health, enabling prompt intervention if needed", R.drawable.img3));
 
         // setup viewpager
         screenPager = findViewById(R.id.screen_viewpager);

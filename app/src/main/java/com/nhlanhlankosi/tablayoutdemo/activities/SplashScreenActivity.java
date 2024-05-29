@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -117,6 +118,9 @@ public class SplashScreenActivity extends AppCompatActivity {
                         SharedPreferencesHelper.saveUser(SplashScreenActivity.this, user);
 
                         Intent openMainActivity = new Intent(SplashScreenActivity.this, MainActivity.class);
+                        if (getIntent() != null && getIntent().getData() != null) {
+                            openMainActivity.setData(getIntent().getData()); // Pass the deep link data to MainActivity
+                        }
                         openMainActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(openMainActivity);
                         finish();
