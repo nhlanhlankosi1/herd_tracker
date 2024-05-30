@@ -10,6 +10,16 @@
         layout="@layout/include_toolbar" />
 
     <TextView
+        android:id="@+id/cow_names_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:text="The cows in your herd will be listed here"
+        android:textColor="@color/grey"
+        android:textStyle="normal"/>
+
+    <TextView
         android:id="@+id/data_not_found_txt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -21,7 +31,7 @@
         android:visibility="gone" />
 
     <LinearLayout
-        android:id="@+id/gridLayout"
+        android:id="@+id/parent_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="25dp"

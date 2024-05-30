@@ -86,7 +86,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             Toast.makeText(this, "Please check your internet and try again", Toast.LENGTH_SHORT).show();
         };
 
-        handlerDialog.postDelayed(runnableDialog, 5000);
+        handlerDialog.postDelayed(runnableDialog, 10000);
 
     }
 

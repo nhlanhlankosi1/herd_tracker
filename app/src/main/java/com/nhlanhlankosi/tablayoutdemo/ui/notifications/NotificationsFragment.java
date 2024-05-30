@@ -1,6 +1,5 @@
 package com.nhlanhlankosi.tablayoutdemo.ui.notifications;
 
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,8 +9,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -39,11 +36,9 @@ public class NotificationsFragment extends Fragment {
     ArrayList<Notification> previouslySavedNotificationsList = new ArrayList<>();
 
     private CustomRecyclerView myNotificationsRecyclerView;
-    private NotificationsAdapter notificationsAdapter;
 
     private DatabaseReference userNotificationsRef;
     private ValueEventListener userNotificationsRefListener;
-    private boolean areNotificationsAlreadySaved = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -51,7 +46,7 @@ public class NotificationsFragment extends Fragment {
         User currentUser = SharedPreferencesHelper.getUser(this.requireContext());
         userNotificationsRef = FirebaseDatabase.getInstance().getReference("notifications")
                 .child(currentUser.getUserId());
-        areNotificationsAlreadySaved = (SharedPreferencesHelper.getNotifications(requireContext()) != null);
+        boolean areNotificationsAlreadySaved = (SharedPreferencesHelper.getNotifications(requireContext()) != null);
         if (areNotificationsAlreadySaved) {
             previouslySavedNotificationsList = SharedPreferencesHelper.getNotifications(requireContext());
         }
@@ -111,7 +106,6 @@ public class NotificationsFragment extends Fragment {
                             previouslySavedNotificationsList.add(notification);
 
                             // Show a notification
-                            showNotification(notification);
                         }
                     }
 
@@ -133,24 +127,10 @@ public class NotificationsFragment extends Fragment {
 
     private void setUpAdapter() {
 
-        notificationsAdapter = new NotificationsAdapter(this.requireContext(), newNotificationsList);
+        NotificationsAdapter notificationsAdapter = new NotificationsAdapter(this.requireContext(), newNotificationsList);
 
         myNotificationsRecyclerView.setAdapter(notificationsAdapter);
 
-    }
-
-    private void showNotification(Notification notification) {
-        // Create a notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext());
-        builder.setSmallIcon(R.mipmap.ic_launcher);
-        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
-        builder.setContentTitle(notification.getTitle());
-        builder.setContentText(notification.getMessage());
-        builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
-
-        // Show the notification
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
-        notificationManager.notify(12345, builder.build());
     }
 
     @Override

@@ -2,15 +2,22 @@ package com.nhlanhlankosi.tablayoutdemo.ui.myFarm;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -28,6 +35,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.nhlanhlankosi.tablayoutdemo.R;
 import com.nhlanhlankosi.tablayoutdemo.infrastructure.SharedPreferencesHelper;
+import com.nhlanhlankosi.tablayoutdemo.listAdapters.CattleAdapter;
+import com.nhlanhlankosi.tablayoutdemo.models.Cow;
 import com.nhlanhlankosi.tablayoutdemo.models.Geofence;
 import com.nhlanhlankosi.tablayoutdemo.models.LatiLongi;
 import com.nhlanhlankosi.tablayoutdemo.models.User;
@@ -44,6 +53,9 @@ public class MyFarmFragment extends Fragment implements OnMapReadyCallback {
     private DatabaseReference geoFenceCoordinatesRef;
     private DatabaseReference userGeoFenceCoordinatesRef;
 
+    private DatabaseReference herdsRef;
+    private List<Cow> allCattleList = new ArrayList<>();
+
     private ValueEventListener userGeoFenceCoordinatesRefListener;
 
     @Override
@@ -54,6 +66,25 @@ public class MyFarmFragment extends Fragment implements OnMapReadyCallback {
         geoFenceCoordinatesRef = FirebaseDatabase.getInstance().getReference("geo_fence_coordinates");
 
         userGeoFenceCoordinatesRef = geoFenceCoordinatesRef.child(currentUser.getUserId());
+
+        // Fetch all cattle data
+        herdsRef = FirebaseDatabase.getInstance().getReference("herds").child(currentUser.getUserId());
+        herdsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot cattleSnapshot : snapshot.getChildren()) {
+                    Cow cow = cattleSnapshot.getValue(Cow.class);
+                    if (cow != null) {
+                        allCattleList.add(cow);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle potential errors here
+            }
+        });
 
     }
 
@@ -90,7 +121,8 @@ public class MyFarmFragment extends Fragment implements OnMapReadyCallback {
                             .add(latLngs.toArray(new LatLng[0]))
                             .strokeWidth(2)
                             .strokeColor(color)
-                            .fillColor(color));
+                            .fillColor(color)
+                            .clickable(true)); // Make the polygon clickable
                     // Add a marker with the geofence name
                     LatLng center = getPolygonCenter(latLngs);
                     mMap.addMarker(new MarkerOptions()
@@ -98,7 +130,11 @@ public class MyFarmFragment extends Fragment implements OnMapReadyCallback {
                             .title(name)
                             .snippet("")
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                    polygon.setTag(geofence);
+                    polygons.add(polygon);
                 }
+
+                placeCowMarkers();  // Place cow markers after fetching data
             }
 
             @Override
@@ -143,9 +179,14 @@ public class MyFarmFragment extends Fragment implements OnMapReadyCallback {
                             .add(polygonPoints.get(0), polygonPoints.get(1), polygonPoints.get(2), polygonPoints.get(3))
                             .strokeWidth(2)
                             .strokeColor(color)
-                            .fillColor(color));
+                            .fillColor(color)
+                            .clickable(true)); // Make the polygon clickable
                     polygons.add(polygon);
                     polygonPoints.clear();
+
+                    if (firstlatLng == null) {
+                        return;
+                    }
 
                     //Add the first point the user choose
                     mMap.addMarker(new MarkerOptions()
@@ -170,14 +211,170 @@ public class MyFarmFragment extends Fragment implements OnMapReadyCallback {
 
                     List<LatiLongi> coordinates = getCoordinates(polygon.getPoints());
 
-                    Geofence geofence = new Geofence(geofenceName, coordinates, color);
+                    Geofence geofence = new Geofence("", geofenceName, coordinates, color);
                     DatabaseReference newGeoFenceCoordinatesRef = userGeoFenceCoordinatesRef.push();
+                    String geoFenceId = newGeoFenceCoordinatesRef.getKey();
+                    geofence.setId(geoFenceId);
                     newGeoFenceCoordinatesRef.setValue(geofence);
-
                 }
             }
         });
 
+        mMap.setOnPolygonClickListener(new GoogleMap.OnPolygonClickListener() {
+            @Override
+            public void onPolygonClick(@NonNull Polygon polygon) {
+                Geofence geofence = (Geofence) polygon.getTag();
+                if (geofence != null) {
+                    showGeofenceOptionsDialog(geofence);
+                }
+            }
+        });
+
+    }
+
+    private void placeCowMarkers() {
+        for (Cow cow : allCattleList) {
+            LatLng cowLatLng = new LatLng(cow.getLatitude(), cow.getLongitude());
+            mMap.addMarker(new MarkerOptions()
+                    .position(cowLatLng)
+                    .title(cow.getName())
+                    .icon(BitmapDescriptorFactory.fromBitmap(resizeBitmap(R.drawable.img1, 100, 100))));
+        }
+    }
+
+    private Bitmap resizeBitmap(int drawableRes, int width, int height) {
+        Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), drawableRes);
+        return Bitmap.createScaledBitmap(imageBitmap, width, height, false);
+    }
+
+    private void showGeofenceOptionsDialog(Geofence geofence) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Geofence Options");
+        builder.setItems(new CharSequence[]{"Name Geofence", "Add Cow"}, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        showNameGeofenceDialog(geofence);
+                        break;
+                    case 1:
+                        addCowToGeofence(geofence);
+                        break;
+                }
+            }
+        });
+        builder.show();
+    }
+
+    private void showNameGeofenceDialog(Geofence geofence) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Name Geofence");
+
+        final EditText input = new EditText(getActivity());
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String name = input.getText().toString();
+                geofence.setName(name);
+                userGeoFenceCoordinatesRef.child(geofence.getId()).setValue(geofence);
+                Toast.makeText(getActivity(), "Geofence named: " + name, Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    private void addCowToGeofence(Geofence geofence) {
+        if (allCattleList.isEmpty()) {
+            Toast.makeText(getActivity(), "No cattle available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Create a dialog to show the cattle list
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Select a Cow");
+
+        // Create a RecyclerView to display the cattle
+        RecyclerView recyclerView = new RecyclerView(getActivity());
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        CattleAdapter adapter = new CattleAdapter(allCattleList, new CattleAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(Cow cow) {
+                // When a cow is selected, update its location
+                List<LatLng> geofencePoints = getLatLngList(geofence.getCoordinates());
+                LatLng randomPoint = getRandomPointInPolygon(geofencePoints);
+                cow.setLatitude(randomPoint.latitude);
+                cow.setLongitude(randomPoint.longitude);
+                herdsRef.child(cow.getId()).setValue(cow).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(getActivity(), "Cow added to geofence: " + cow.getName(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getActivity(), "Failed to add cow to geofence: " + cow.getName(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+        recyclerView.setAdapter(adapter);
+
+        builder.setView(recyclerView);
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        builder.show();
+    }
+
+    // Helper method to get a random point inside a polygon
+    private LatLng getRandomPointInPolygon(List<LatLng> polygon) {
+        Random random = new Random();
+        double minLat = Double.MAX_VALUE;
+        double maxLat = Double.MIN_VALUE;
+        double minLng = Double.MAX_VALUE;
+        double maxLng = Double.MIN_VALUE;
+
+        for (LatLng point : polygon) {
+            minLat = Math.min(minLat, point.latitude);
+            maxLat = Math.max(maxLat, point.latitude);
+            minLng = Math.min(minLng, point.longitude);
+            maxLng = Math.max(maxLng, point.longitude);
+        }
+
+        LatLng randomPoint;
+        do {
+            double randomLat = minLat + (maxLat - minLat) * random.nextDouble();
+            double randomLng = minLng + (maxLng - minLng) * random.nextDouble();
+            randomPoint = new LatLng(randomLat, randomLng);
+        } while (!isPointInPolygon(randomPoint, polygon));
+
+        return randomPoint;
+    }
+
+    // Helper method to check if a point is inside a polygon
+    private boolean isPointInPolygon(LatLng point, List<LatLng> polygon) {
+        boolean result = false;
+        int j = polygon.size() - 1;
+        for (int i = 0; i < polygon.size(); i++) {
+            if (polygon.get(i).longitude < point.longitude && polygon.get(j).longitude >= point.longitude
+                    || polygon.get(j).longitude < point.longitude && polygon.get(i).longitude >= point.longitude) {
+                if (polygon.get(i).latitude + (point.longitude - polygon.get(i).longitude) / (polygon.get(j).longitude - polygon.get(i).longitude) * (polygon.get(j).latitude - polygon.get(i).latitude) < point.latitude) {
+                    result = !result;
+                }
+            }
+            j = i;
+        }
+        return result;
     }
 
     @Override
@@ -187,7 +384,6 @@ public class MyFarmFragment extends Fragment implements OnMapReadyCallback {
         if (userGeoFenceCoordinatesRef != null && userGeoFenceCoordinatesRefListener != null) {
             userGeoFenceCoordinatesRef.removeEventListener(userGeoFenceCoordinatesRefListener);
         }
-
     }
 
     public List<LatiLongi> getCoordinates(List<LatLng> latLngList) {
@@ -219,5 +415,4 @@ public class MyFarmFragment extends Fragment implements OnMapReadyCallback {
         }
         return new LatLng(latitude / n, longitude / n);
     }
-
 }

@@ -27,9 +27,14 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -56,6 +61,8 @@ public class WatchBoardFragment extends Fragment {
     private TextView motionSensorHeading;
     private TextView heartRateHeading;
     private TextView dataNotFoundTxt;
+
+    private TextView cowNamesTxt;
     private LineChart temperatureChart;
     private LineChart motionSensorChart;
     private LineChart heartRateChart;
@@ -86,12 +93,15 @@ public class WatchBoardFragment extends Fragment {
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
         setHasOptionsMenu(true);
 
+        cowNamesTxt = view.findViewById(R.id.cow_names_tv);
         dataNotFoundTxt = view.findViewById(R.id.data_not_found_txt);
-        parentLinearLayout = view.findViewById(R.id.gridLayout);
+        parentLinearLayout = view.findViewById(R.id.parent_linear_layout);
         temperatureChartContainer = view.findViewById(R.id.temperature_chart_container);
         motionSensorChartContainer = view.findViewById(R.id.motion_sensor_chart_container);
         heartRateChartContainer = view.findViewById(R.id.heart_rate_chart_container);
-        dataNotFoundTxt.setVisibility(View.GONE);
+        dataNotFoundTxt.setVisibility(View.VISIBLE);
+        dataNotFoundTxt.setText("To show cattle data, enter the cow name above");
+        parentLinearLayout.setVisibility(View.GONE);
         temperatureHeading = view.findViewById(R.id.temperature_heading);
         motionSensorHeading = view.findViewById(R.id.motion_sensor_heading);
         heartRateHeading = view.findViewById(R.id.heart_rate_heading);
@@ -117,7 +127,7 @@ public class WatchBoardFragment extends Fragment {
 
                     allCattleSensorDataList.clear();
 
-                    CowSensorData cowSensorData = new CowSensorData();
+                    CowSensorData cowSensorData;
 
                     for (DataSnapshot cowSensorDataSnapShot : snapshot.getChildren()) {
 
@@ -136,6 +146,8 @@ public class WatchBoardFragment extends Fragment {
 
                     }
 
+                    printOutCowNamesData();
+
                 }
             }
 
@@ -148,6 +160,25 @@ public class WatchBoardFragment extends Fragment {
         cattleSensorDataRef.addValueEventListener(cattleSensorDataRefListener);
 
         return view;
+    }
+
+    private void printOutCowNamesData() {
+        // Print cow names
+        // Create a StringBuilder and append the initial text
+        StringBuilder cowNames = new StringBuilder("The cows in your herd are: ");
+
+        // Append cow names
+        for (CowSensorData cowSensorData : allCattleSensorDataList) {
+            cowNames.append(cowSensorData.getCowName()).append(", ");
+        }
+
+        // Remove the last comma and space if the list is not empty
+        if (cowNames.length() > "The cows in your herd are: ".length()) {
+            cowNames.setLength(cowNames.length() - 2);
+        }
+
+        cowNamesTxt.setText(cowNames.toString());
+
     }
 
 
@@ -214,7 +245,6 @@ public class WatchBoardFragment extends Fragment {
     }
 
     private void fetchAndDisplayData(String cowName) {
-        // Get cow name from EditText input
 
         if (!cowName.isEmpty()) {
 
@@ -223,6 +253,7 @@ public class WatchBoardFragment extends Fragment {
 
             if (cowSensorData == null) {
                 dataNotFoundTxt.setVisibility(View.VISIBLE);
+                dataNotFoundTxt.setText("No data found. Make sure you have a cow named: " + cowName);
                 parentLinearLayout.setVisibility(View.GONE);
                 return;
             } else {
@@ -230,6 +261,7 @@ public class WatchBoardFragment extends Fragment {
                 parentLinearLayout.setVisibility(View.VISIBLE);
             }
 
+            // Add the entries to the respective data sets as before
             List<Entry> temperatureEntries = new ArrayList<>();
             for (int i = 0; i < cowSensorData.getTemperatures().size(); i++) {
                 temperatureEntries.add(new Entry(i + 1, new Float(cowSensorData.getTemperatures().get(i))));
@@ -246,32 +278,67 @@ public class WatchBoardFragment extends Fragment {
                 heartRateEntries.add(new Entry(i + 1, cowSensorData.getHeartRates().get(i)));
             }
 
-            // Populate temperature chart
+            // Create and customize the data sets
             LineDataSet temperatureDataSet = new LineDataSet(temperatureEntries, "Temperature");
-            temperatureDataSet.setDrawCircles(true);
-            LineData temperatureData = new LineData(temperatureDataSet);
-            temperatureChart.setData(temperatureData);
-            temperatureChart.invalidate();
-
-            // Populate motionSensor chart
-            LineDataSet motionSensorData = new LineDataSet(motionSensorEntries, "Motion Sensor Data");
-            motionSensorData.setDrawCircles(true);
-            LineData motionData = new LineData(motionSensorData);
-            motionSensorChart.setData(motionData);
-            motionSensorChart.invalidate();
-
-            // Populate heart rate chart
+            LineDataSet motionSensorDataSet = new LineDataSet(motionSensorEntries, "Motion Sensor Data");
             LineDataSet heartRateDataSet = new LineDataSet(heartRateEntries, "Heart Rate");
-            heartRateDataSet.setDrawCircles(true);
-            LineData heartRateData = new LineData(heartRateDataSet);
-            heartRateChart.setData(heartRateData);
-            heartRateChart.invalidate();
+
+// Customize and populate the charts
+            customizeChart(temperatureChart, temperatureDataSet, "Temperature Over Time", Color.RED);
+            customizeChart(motionSensorChart, motionSensorDataSet, "Motion Sensor Data Over Time", Color.BLUE);
+            customizeChart(heartRateChart, heartRateDataSet, "Heart Rate Over Time", Color.GREEN);
 
         } else {
             // Show error message if cow name is empty
             Toast.makeText(getContext(), "Please enter a cow name", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void customizeChart(LineChart chart, LineDataSet dataSet, String descriptionText, int color) {
+        // Customize the data set
+        dataSet.setColor(color);
+        dataSet.setCircleColor(color);
+        dataSet.setLineWidth(2f);
+        dataSet.setCircleRadius(4f);
+        dataSet.setDrawCircleHole(false);
+        dataSet.setValueTextSize(10f);
+        dataSet.setValueTextColor(color);
+
+        // Customize the chart description
+        Description description = new Description();
+        description.setText(descriptionText);
+        description.setTextSize(12f);
+        chart.setDescription(description);
+
+        // Customize the chart legend
+        Legend legend = chart.getLegend();
+        legend.setForm(Legend.LegendForm.LINE);
+        legend.setTextSize(12f);
+        legend.setTextColor(color);
+
+        // Customize the X axis
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(1f);
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                // Custom formatting for X axis labels
+                return "Time"; // Replace with actual time formatting if necessary
+            }
+        });
+
+        // Customize the Y axis
+        YAxis leftAxis = chart.getAxisLeft();
+        YAxis rightAxis = chart.getAxisRight();
+        rightAxis.setEnabled(false); // Disable right Y axis
+
+        // Apply data to the chart
+        LineData lineData = new LineData(dataSet);
+        chart.setData(lineData);
+        chart.invalidate(); // Refresh the chart
+    }
+
 
     @Override
     public void onDetach() {
