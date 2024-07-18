@@ -38,6 +38,7 @@ import com.nhlanhlankosi.tablayoutdemo.infrastructure.Common;
 import com.nhlanhlankosi.tablayoutdemo.infrastructure.SharedPreferencesHelper;
 import com.nhlanhlankosi.tablayoutdemo.models.Cow;
 import com.nhlanhlankosi.tablayoutdemo.models.CowLocation;
+import com.nhlanhlankosi.tablayoutdemo.models.CowSensorData;
 import com.nhlanhlankosi.tablayoutdemo.models.User;
 import com.squareup.picasso.Picasso;
 
@@ -218,6 +219,7 @@ public class AddCowActivity extends AppCompatActivity {
         } else {
 
             DatabaseReference herdsRef = FirebaseDatabase.getInstance().getReference("herds");
+            DatabaseReference cattleSensorDataRef = FirebaseDatabase.getInstance().getReference("cattle_sensor_data");
 
             User savedUser = SharedPreferencesHelper.getUser(this);
             CowLocation cowLocation = SharedPreferencesHelper.getCowLocation(this);
@@ -226,7 +228,13 @@ public class AddCowActivity extends AppCompatActivity {
 
                 String userId = savedUser.getUserId();
                 DatabaseReference cowRef = herdsRef.child(userId).push();
+                DatabaseReference cowSensorDataRef;
                 String cowId = cowRef.getKey();
+                if (cowId != null) {
+                    cowSensorDataRef = cattleSensorDataRef.child(userId).child(cowId);
+                } else {
+                   cowSensorDataRef = cattleSensorDataRef.child(userId).push();
+                }
 
                 double longitude = cowLocation != null ? cowLocation.getLongitude() : 0;
                 double latitude = cowLocation != null ? cowLocation.getLatitude() : 0;
@@ -241,6 +249,10 @@ public class AddCowActivity extends AppCompatActivity {
                         dismissDialog();
                         if (task.isSuccessful()) {
                             Toast.makeText(AddCowActivity.this, "Cow added to herd successfully", Toast.LENGTH_SHORT).show();
+                            //Initialise with random cattle sensor data
+                            CowSensorData cowSensorData = CowSensorData.createRandomSensorData(cow.getId(), cow.getName(), 4);
+                            cowSensorDataRef.setValue(cowSensorData);
+
                             AddCowActivity.super.onBackPressed();
                         } else {
                             Toast.makeText(AddCowActivity.this, "Registration Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();

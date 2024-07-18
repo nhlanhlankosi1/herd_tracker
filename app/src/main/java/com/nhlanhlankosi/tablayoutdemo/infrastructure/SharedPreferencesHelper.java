@@ -54,6 +54,14 @@ public class SharedPreferencesHelper {
         return getObject(context, "cow_location", CowLocation.class);
     }
 
+    public static void saveCowId(Context context, String cowId) {
+        saveObject(context, "cow_id", cowId);
+    }
+
+    public static String getCowId(Context context) {
+        return getObject(context, "cow_id", String.class);
+    }
+
     public static void deleteUser(Context context) {
         SharedPreferences.Editor editor = getSharedPreferences(context).edit();
         editor.remove("user");

@@ -45,7 +45,6 @@ import java.util.ArrayList;
 public class MyHerdFragment extends Fragment implements SearchCattleListener {
     public static final int ITEM_VIEW_CACHE_SIZE = 20;
     ArrayList<Cow> allCattleList = new ArrayList<>();
-    private Toolbar toolbar;
     private CustomRecyclerView myHerdRecyclerView;
     private SearchCattleAdapter searchCattleAdapter;
     private ImageView emptyViewIcon;
@@ -53,12 +52,15 @@ public class MyHerdFragment extends Fragment implements SearchCattleListener {
 
     private DatabaseReference userHerdRef;
     private ValueEventListener userHerdRefListener;
+    private DatabaseReference userNotificationsRef;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         User currentUser = SharedPreferencesHelper.getUser(this.requireContext());
         userHerdRef = FirebaseDatabase.getInstance().getReference("herds")
+                .child(currentUser.getUserId());
+        userNotificationsRef = FirebaseDatabase.getInstance().getReference("notifications")
                 .child(currentUser.getUserId());
     }
 
@@ -75,7 +77,7 @@ public class MyHerdFragment extends Fragment implements SearchCattleListener {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        toolbar = view.findViewById(R.id.toolbar);
+        Toolbar toolbar = view.findViewById(R.id.toolbar);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
 
         myHerdRecyclerView = view.findViewById(R.id.my_herd_recycler_view);
@@ -195,7 +197,7 @@ public class MyHerdFragment extends Fragment implements SearchCattleListener {
 
     private void setUpAdapter() {
 
-        searchCattleAdapter = new SearchCattleAdapter(this.requireContext(), allCattleList);
+        searchCattleAdapter = new SearchCattleAdapter(this.requireContext(), allCattleList, userNotificationsRef);
 
         myHerdRecyclerView.setAdapter(searchCattleAdapter);
 
@@ -204,8 +206,8 @@ public class MyHerdFragment extends Fragment implements SearchCattleListener {
     @Override
     public void onEmptyResultReturnedFor(String searchText) {
 
-        final String noHymnsForSearch = getString(R.string.no_cow_from_search_fmt, searchText);
-        emptyViewText.setText(noHymnsForSearch);
+        final String noCattleForSearch = getString(R.string.no_cow_from_search_fmt, searchText);
+        emptyViewText.setText(noCattleForSearch);
         emptyViewIcon.setVisibility(View.VISIBLE);
         emptyViewText.setVisibility(View.VISIBLE);
 

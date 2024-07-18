@@ -11,6 +11,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
@@ -36,28 +37,69 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.nhlanhlankosi.tablayoutdemo.R;
 import com.nhlanhlankosi.tablayoutdemo.infrastructure.SharedPreferencesHelper;
+import com.nhlanhlankosi.tablayoutdemo.models.Cow;
 import com.nhlanhlankosi.tablayoutdemo.models.CowLocation;
 import com.nhlanhlankosi.tablayoutdemo.models.Notification;
 import com.nhlanhlankosi.tablayoutdemo.models.User;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity {
     public static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 2;
     private static final int REQUEST_LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final int UPDATE_INTERVAL = 8000; // 5 seconds
+    private final ArrayList<Cow> allCattleList = new ArrayList<>();
+    private final Handler handler = new Handler();
     ArrayList<Notification> notificationsList = new ArrayList<>();
+    // Declare a set to keep track of previous notification IDs
+    private Set<String> previousNotificationIds = new HashSet<>();
+    private boolean isActivityJustStarting = true;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private User currentUser;
     private CircleImageView userProfilePicInToolbar;
     private Toolbar toolbar;
-    private DatabaseReference userNotificationsRef;
-    private ValueEventListener userNotificationsRefListener;
+    private ValueEventListener userNotificationsQueryListener;
+    private Cow selectedCow;
+    private final Runnable updateCowRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (selectedCow != null) {
+                Random random = new Random();
+                // Update temperature
+                float randomTemperature = 24 + random.nextFloat() * 10; // Random temperature between 24 and 34. Send notification when notification when temperature is above 30
+                float roundedTemperature = Math.round(randomTemperature * 10) / 10.0f; // Round to 1 decimal place
+                selectedCow.setTemperature(roundedTemperature);
+
+                // Update heartbeat
+                selectedCow.setHeartRate(48 + random.nextInt(40)); // Random heartbeat between 48 and 87. Send notification when heartbeat is above 83
+
+                // Update the cow data in Firebase
+                DatabaseReference cowRef = FirebaseDatabase.getInstance().getReference("herds")
+                        .child(currentUser.getUserId()).child(selectedCow.getId());
+                cowRef.setValue(selectedCow);
+
+                // Schedule the next update
+                handler.postDelayed(this, UPDATE_INTERVAL);
+            }
+        }
+    };
+
+    private DatabaseReference userHerdRef;
+    private ValueEventListener userHerdRefListener;
+    private Query userNotificationsRefQuery;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +143,10 @@ public class MainActivity extends AppCompatActivity {
 
         showUserNameAndProfilePicOnToolbar();
 
-        userNotificationsRef = FirebaseDatabase.getInstance().getReference("notifications")
+        DatabaseReference userNotificationsRef = FirebaseDatabase.getInstance().getReference("notifications")
+                .child(currentUser.getUserId());
+
+        userHerdRef = FirebaseDatabase.getInstance().getReference("herds")
                 .child(currentUser.getUserId());
 
         userProfilePicInToolbar.setOnClickListener(new View.OnClickListener() {
@@ -120,12 +165,20 @@ public class MainActivity extends AppCompatActivity {
 
         requestNotificationsPermission();
 
-        userNotificationsRefListener = new ValueEventListener() {
+        userNotificationsRefQuery = userNotificationsRef.orderByChild("timeStamp").limitToLast(100);
+        userNotificationsQueryListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                if (isActivityJustStarting) {
+                    isActivityJustStarting = false;
+                    return;
+                }
+
                 if (snapshot.exists()) {
 
-                    notificationsList.clear();
+                    Set<String> currentNotificationIds = new HashSet<>();
+                    List<Notification> currentNotificationsList = new ArrayList<>();
 
                     for (DataSnapshot notificationSnapShot : snapshot.getChildren()) {
                         Notification notification = notificationSnapShot.getValue(Notification.class);
@@ -134,10 +187,63 @@ public class MainActivity extends AppCompatActivity {
                             return;
                         }
 
-                        notificationsList.add(notification);
+                        currentNotificationsList.add(notification);
+                        currentNotificationIds.add(notification.getId()); // Assuming Notification has a method getId()
                     }
 
-                    showNotification(notificationsList.get(notificationsList.size() - 1));
+                    // Sort notifications in descending order based on timestamp
+                    Collections.sort(currentNotificationsList, new Comparator<Notification>() {
+                        @Override
+                        public int compare(Notification n1, Notification n2) {
+                            return Long.compare(n2.getTimeStamp(), n1.getTimeStamp());
+                        }
+                    });
+
+                    // Find new notifications by comparing the sets
+                    for (Notification notification : currentNotificationsList) {
+                        if (!previousNotificationIds.contains(notification.getId())) {
+                            // This is a new notification
+                            showNotification(notification);
+                        }
+                    }
+
+                    // Update the previous notification IDs set and the notifications list
+                    previousNotificationIds.clear();
+                    previousNotificationIds.addAll(currentNotificationIds);
+                    notificationsList.clear();
+                    notificationsList.addAll(currentNotificationsList);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle error
+            }
+        };
+
+        userNotificationsRefQuery
+                .addValueEventListener(userNotificationsQueryListener);
+
+        userHerdRefListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+
+                    allCattleList.clear();
+
+                    for (DataSnapshot cattleSnapShot : snapshot.getChildren()) {
+                        Cow cow = cattleSnapShot.getValue(Cow.class);
+                        allCattleList.add(cow);
+                    }
+
+                    // Select one cow for updating
+                    if (!allCattleList.isEmpty()) {
+                        selectedCow = allCattleList.get(0); // Selecting the first cow for example
+                        if (SharedPreferencesHelper.getCowId(MainActivity.this) == null) {
+                            SharedPreferencesHelper.saveCowId(MainActivity.this, selectedCow.getId());
+                        }
+                        startUpdatingCow();
+                    }
 
                 }
             }
@@ -148,8 +254,12 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        userNotificationsRef.addValueEventListener(userNotificationsRefListener);
+        userHerdRef.addListenerForSingleValueEvent(userHerdRefListener);
 
+    }
+
+    private void startUpdatingCow() {
+        handler.post(updateCowRunnable);
     }
 
     @Override
@@ -247,7 +357,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showNotification(Notification notification) {
+    public void showNotification(Notification notification) {
         createNotificationChannel();
 
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("myapp://notification"));
@@ -317,9 +427,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        if (userNotificationsRef != null && userNotificationsRefListener != null) {
-            userNotificationsRef.removeEventListener(userNotificationsRefListener);
+        if (userNotificationsRefQuery != null && userNotificationsQueryListener != null) {
+            userNotificationsRefQuery.removeEventListener(userNotificationsQueryListener);
         }
+        if (userHerdRef != null && userHerdRefListener != null) {
+            userHerdRef.removeEventListener(userHerdRefListener);
+        }
+        handler.removeCallbacks(updateCowRunnable);
         super.onDestroy();
     }
 }

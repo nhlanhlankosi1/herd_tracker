@@ -22,15 +22,22 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ServerValue;
 import com.nhlanhlankosi.tablayoutdemo.R;
 import com.nhlanhlankosi.tablayoutdemo.activities.CowInfoActivity;
+import com.nhlanhlankosi.tablayoutdemo.infrastructure.NotificationsHelper;
+import com.nhlanhlankosi.tablayoutdemo.infrastructure.SharedPreferencesHelper;
 import com.nhlanhlankosi.tablayoutdemo.infrastructure.interfaces.ItemClickListener;
 import com.nhlanhlankosi.tablayoutdemo.models.Cow;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -39,11 +46,18 @@ public class SearchCattleAdapter extends RecyclerView.Adapter<SearchCattleAdapte
     private final Context context;
     private final List<Cow> cattleList;
     private final ArrayList<Cow> arrayList = new ArrayList<>();
+    private final DatabaseReference userNotificationsRef;
+    private String selectedCowId = "";
 
-    public SearchCattleAdapter(Context context, List<Cow> cattleList) {
+    private boolean isHeartRateNotificationSent = false;
+    private boolean isTemperatureNotificationSent = false;
+
+    public SearchCattleAdapter(Context context, List<Cow> cattleList, DatabaseReference userNotificationsRef) {
         this.context = context;
         this.cattleList = cattleList;
         this.arrayList.addAll(cattleList);
+        this.selectedCowId = SharedPreferencesHelper.getCowId(context);
+        this.userNotificationsRef = userNotificationsRef;
     }
 
     @NonNull
@@ -65,6 +79,48 @@ public class SearchCattleAdapter extends RecyclerView.Adapter<SearchCattleAdapte
                     .centerInside()
                     .into(viewHolder.cowPicture);
 
+        }
+
+        // Highlight the selected item
+        if (cattleList.get(position).getId().equals(selectedCowId)) {
+            viewHolder.container.setBackgroundResource(R.drawable.border_highlight);
+        } else {
+            viewHolder.container.setBackgroundResource(android.R.color.transparent);
+        }
+
+        //Handle notification sending. Check if temperature is above 39˚C or heartRate > 85 and send notification
+        if (cattleList.get(position).getId().equals(selectedCowId)) {
+
+            if (cattleList.get(position).getHeartRate() > 83 && !isHeartRateNotificationSent) {
+                String notificationId = NotificationsHelper.generateRandomId();
+                HashMap<String, Object> notification = new HashMap<>();
+                notification.put("id", notificationId);
+                notification.put("title", "Abnormal Heart Rate");
+                notification.put("message", "Abnormal Vital Signs: An animal's heart rate is outside the normal range.");
+                notification.put("type", "abnormal_vital_signs");
+                notification.put("timeStamp", ServerValue.TIMESTAMP);
+                userNotificationsRef.child(notificationId).setValue(notification).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        isHeartRateNotificationSent = true;
+                    }
+                });
+            }
+            if (cattleList.get(position).getTemperature() > 30 && !isTemperatureNotificationSent) {
+                String notificationId = NotificationsHelper.generateRandomId();
+                HashMap<String, Object> notification = new HashMap<>();
+                notification.put("id", notificationId);
+                notification.put("title", "Abnormal Body Temperature");
+                notification.put("message", "Abnormal Vital Signs: An animal's temperature is outside the normal range.");
+                notification.put("type", "abnormal_vital_signs");
+                notification.put("timeStamp", ServerValue.TIMESTAMP);
+                userNotificationsRef.child(notificationId).setValue(notification).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        isTemperatureNotificationSent = true;
+                    }
+                });
+            }
         }
 
         viewHolder.cowNameTv.setText(cattleList.get(position).getName());
@@ -125,6 +181,8 @@ public class SearchCattleAdapter extends RecyclerView.Adapter<SearchCattleAdapte
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        private final ConstraintLayout container;
         private final ImageView cowPicture;
         private final TextView cowNameTv;
         private final TextView collarIdTv;
@@ -135,7 +193,7 @@ public class SearchCattleAdapter extends RecyclerView.Adapter<SearchCattleAdapte
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-
+            container = itemView.findViewById(R.id.container);
             cowPicture = itemView.findViewById(R.id.cow_picture);
             cowNameTv = itemView.findViewById(R.id.cow_name_tv);
             collarIdTv = itemView.findViewById(R.id.collar_id_tv);

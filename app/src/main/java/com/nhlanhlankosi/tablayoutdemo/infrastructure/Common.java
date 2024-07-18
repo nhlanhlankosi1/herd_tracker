@@ -8,6 +8,8 @@ import androidx.annotation.NonNull;
 
 import com.nhlanhlankosi.tablayoutdemo.models.CowSensorData;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 
 public class Common {
@@ -26,6 +28,12 @@ public class Common {
             }
         }
         return null;
+    }
+
+    public static double roundToTwoDecimalPlaces(double value) {
+        BigDecimal bd = new BigDecimal(Double.toString(value));
+        bd = bd.setScale(2, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
     public static void closeKeyboard(@NonNull Activity activity) {

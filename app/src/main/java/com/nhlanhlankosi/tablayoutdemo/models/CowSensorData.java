@@ -1,6 +1,7 @@
 package com.nhlanhlankosi.tablayoutdemo.models;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class CowSensorData {
 
@@ -59,6 +60,27 @@ public class CowSensorData {
 
     public void setHeartRates(ArrayList<Long> heartRates) {
         this.heartRates = heartRates;
+    }
+
+    public static CowSensorData createRandomSensorData(String cowId, String cowName, int numEntries) {
+        Random random = new Random();
+
+        ArrayList<CowLocation> locations = new ArrayList<>();
+        ArrayList<Double> temperatures = new ArrayList<>();
+        ArrayList<Long> heartRates = new ArrayList<>();
+
+        for (int i = 0; i < numEntries; i++) {
+            // Random location - assuming CowLocation has a constructor that takes random coordinates
+            locations.add(new CowLocation(random.nextDouble() * 100, random.nextDouble() * 100));
+
+            // Random temperature between 35.0 and 40.0 degrees Celsius
+            temperatures.add(35.0 + (40.0 - 35.0) * random.nextDouble());
+
+            // Random heart rate between 40 and 120 BPM
+            heartRates.add(40L + (long)(random.nextInt(81)));
+        }
+
+        return new CowSensorData(cowId, cowName, locations, temperatures, heartRates);
     }
 
 }

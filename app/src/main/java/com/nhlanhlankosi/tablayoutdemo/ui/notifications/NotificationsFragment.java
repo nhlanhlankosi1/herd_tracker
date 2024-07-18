@@ -33,8 +33,6 @@ public class NotificationsFragment extends Fragment {
     public static final int ITEM_VIEW_CACHE_SIZE = 20;
     ArrayList<Notification> newNotificationsList = new ArrayList<>();
 
-    ArrayList<Notification> previouslySavedNotificationsList = new ArrayList<>();
-
     private CustomRecyclerView myNotificationsRecyclerView;
 
     private DatabaseReference userNotificationsRef;
@@ -46,10 +44,6 @@ public class NotificationsFragment extends Fragment {
         User currentUser = SharedPreferencesHelper.getUser(this.requireContext());
         userNotificationsRef = FirebaseDatabase.getInstance().getReference("notifications")
                 .child(currentUser.getUserId());
-        boolean areNotificationsAlreadySaved = (SharedPreferencesHelper.getNotifications(requireContext()) != null);
-        if (areNotificationsAlreadySaved) {
-            previouslySavedNotificationsList = SharedPreferencesHelper.getNotifications(requireContext());
-        }
 
     }
 
@@ -69,8 +63,8 @@ public class NotificationsFragment extends Fragment {
         myNotificationsRecyclerView.setDrawingCacheEnabled(true);
         myNotificationsRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
-        layoutManager.setReverseLayout(true);
-        layoutManager.setStackFromEnd(true);
+//        layoutManager.setReverseLayout(true);
+//        layoutManager.setStackFromEnd(true);
         myNotificationsRecyclerView.setLayoutManager(layoutManager);
         myNotificationsRecyclerView.setHasFixedSize(true);
 
@@ -101,15 +95,8 @@ public class NotificationsFragment extends Fragment {
 
                         newNotificationsList.add(notification);
 
-                        // Check if the notification is not already in the list
-                        if (!previouslySavedNotificationsList.contains(notification)) {
-                            previouslySavedNotificationsList.add(notification);
-
-                            // Show a notification
-                        }
                     }
 
-                    SharedPreferencesHelper.saveNotifications(requireContext(), previouslySavedNotificationsList);
                     setUpAdapter();
 
                 }

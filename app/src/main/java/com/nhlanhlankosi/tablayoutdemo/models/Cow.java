@@ -1,5 +1,7 @@
 package com.nhlanhlankosi.tablayoutdemo.models;
 
+import com.nhlanhlankosi.tablayoutdemo.infrastructure.Common;
+
 public class Cow {
     private String name;
     private String id;
@@ -107,7 +109,7 @@ public class Cow {
     }
 
     public double getTemperature() {
-        return temperature;
+        return Common.roundToTwoDecimalPlaces(temperature);
     }
 
     public void setTemperature(double temperature) {
